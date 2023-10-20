@@ -1,7 +1,7 @@
 CREATE TABLE "users" (
   "id" bigserial PRIMARY KEY,
   "hash_password" varchar NOT NULL,
-  "name" varchar NOT NULL,
+  "name" varchar UNIQUE NOT NULL,
   "power" varchar NOT NULL,
   "email" varchar NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -32,8 +32,6 @@ CREATE TABLE "reply" (
   "comment_id" bigint NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
-
-CREATE INDEX ON "post" ("user_id");
 
 ALTER TABLE "post" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 

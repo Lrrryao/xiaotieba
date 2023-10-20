@@ -18,7 +18,7 @@ INSERT INTO users (
   phone
 ) VALUES (
   $1, $2, $3, $4, $5
-) RETURNING id, hash_password, name, power, email, created_at, phone
+) RETURNING id, hash_password, name, power, email, created_at, phone, is_email_verified
 `
 
 type CreateUserParams struct {
@@ -46,6 +46,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.CreatedAt,
 		&i.Phone,
+		&i.IsEmailVerified,
 	)
 	return i, err
 }
@@ -60,13 +61,13 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 	return err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT id, hash_password, name, power, email, created_at, phone FROM users
+const getUserByID = `-- name: GetUserByID :one
+SELECT id, hash_password, name, power, email, created_at, phone, is_email_verified FROM users
 WHERE id = $1 LIMIT 1
 `
 
-func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -76,12 +77,34 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Email,
 		&i.CreatedAt,
 		&i.Phone,
+		&i.IsEmailVerified,
+	)
+	return i, err
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, hash_password, name, power, email, created_at, phone, is_email_verified FROM users
+WHERE name = $1 LIMIT 1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, name)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.HashPassword,
+		&i.Name,
+		&i.Power,
+		&i.Email,
+		&i.CreatedAt,
+		&i.Phone,
+		&i.IsEmailVerified,
 	)
 	return i, err
 }
 
 const getUserForUpdate = `-- name: GetUserForUpdate :one
-SELECT id, hash_password, name, power, email, created_at, phone FROM users
+SELECT id, hash_password, name, power, email, created_at, phone, is_email_verified FROM users
 WHERE id = $1 LIMIT 1
 FOR NO KEY UPDATE
 `
@@ -97,6 +120,7 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, id int64) (User, error) 
 		&i.Email,
 		&i.CreatedAt,
 		&i.Phone,
+		&i.IsEmailVerified,
 	)
 	return i, err
 }

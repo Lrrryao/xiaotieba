@@ -5,7 +5,10 @@
 package db
 
 import (
+	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Comment struct {
@@ -33,12 +36,34 @@ type Reply struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-type User struct {
-	ID           int64     `json:"id"`
-	HashPassword string    `json:"hash_password"`
-	Name         string    `json:"name"`
-	Power        string    `json:"power"`
-	Email        string    `json:"email"`
+type Session struct {
+	ID           uuid.UUID `json:"id"`
+	Username     string    `json:"username"`
+	ExpireAt     time.Time `json:"expire_at"`
 	CreatedAt    time.Time `json:"created_at"`
-	Phone        string    `json:"phone"`
+	ClientIp     string    `json:"client_ip"`
+	Useragent    string    `json:"useragent"`
+	Isblocked    bool      `json:"isblocked"`
+	RefreshToken string    `json:"refresh_token"`
+}
+
+type User struct {
+	ID              int64     `json:"id"`
+	HashPassword    string    `json:"hash_password"`
+	Name            string    `json:"name"`
+	Power           string    `json:"power"`
+	Email           string    `json:"email"`
+	CreatedAt       time.Time `json:"created_at"`
+	Phone           string    `json:"phone"`
+	IsEmailVerified bool      `json:"is_email_verified"`
+}
+
+type VerifyEmail struct {
+	ID              int64          `json:"id"`
+	Username        sql.NullString `json:"username"`
+	Email           sql.NullString `json:"email"`
+	SecretCode      string         `json:"secret_code"`
+	IsSecretUsed    bool           `json:"is_secret_used"`
+	SecretCreatedAt time.Time      `json:"secret_created_at"`
+	SecretExpiredAt time.Time      `json:"secret_expired_at"`
 }
