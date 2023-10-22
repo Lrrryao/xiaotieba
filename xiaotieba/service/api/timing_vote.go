@@ -37,51 +37,78 @@ func (server *Server) vote(ctx *gin.Context) {
 		return
 	}
 
-	for {
-		switch {
+	switch {
 
-		//查看投票
-		case req.Action == "check":
-			err := server.cache.Get(ctx, req.Topic)
-			if err != nil {
-				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
-				conn.Close()
-				return
-			}
-		//发起投票
-		case req.Action == "Initiate":
-			mu.Lock()
-			//这是第一个
-			req.Voting.starter = req.Username
-			req.Voting.VoteID = req.VoteID
-			req.Voting.topic = req.Topic
-			err := server.cache.Add(ctx, req.Topic, req.Voting, req.Duration)
-			if err != nil {
-				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
-				mu.Unlock()
-				conn.Close()
-				return
-			}
-			mu.Unlock()
-		//加入投票
-		case req.Action == "join":
-			mu.Lock()
-
-			req.Voting.joiner[req.Username] = req.Content
-			err := server.cache.Update(ctx, req.Topic, req.Voting, req.Duration)
-			if err != nil {
-				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
-				mu.Unlock()
-				conn.Close()
-				return
-			}
-			mu.Unlock()
-		case req.Action == "quit":
-			ctx.JSON(websocket.CloseNormalClosure, "connection closed")
+	//查看投票
+	case req.Action == "check":
+		result, err := server.cache.Get(ctx, req.Topic)
+		if err != nil {
+			ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
 			conn.Close()
 			return
 		}
+		ctx.JSON(3001, normalResponce("check voting", result))
+		return
+	//发起投票
+	case req.Action == "Initiate":
+		mu.Lock()
+		//这是第一个
+		req.Voting.starter = req.Username
+		req.Voting.VoteID = req.VoteID
+		req.Voting.topic = req.Topic
+		err := server.cache.Add(ctx, req.Topic, req.Voting, req.Duration)
+		if err != nil {
+			ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
+			mu.Unlock()
+			conn.Close()
+			return
+		}
+		mu.Unlock()
+		ctx.JSON(3001, normalResponce("3001", "successfully initiate"))
+		return
+	//加入投票
+	case req.Action == "join":
+		mu.Lock()
+
+		req.Voting.joiner[req.Username] = req.Content
+		err := server.cache.Update(ctx, req.Topic, req.Voting, req.Duration)
+		if err != nil {
+			ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
+			mu.Unlock()
+			conn.Close()
+			return
+		}
+		mu.Unlock()
+		ctx.JSON(3001, normalResponce("3001", "successfully join"))
+		return
+	case req.Action == "delete_topic":
+		mu.Lock()
+
+		req.Voting.joiner[req.Username] = req.Content
+		err := server.cache.Delete(ctx, req.Topic)
+		if err != nil {
+			ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
+			mu.Unlock()
+			conn.Close()
+			return
+		}
+		mu.Unlock()
+		ctx.JSON(3001, normalResponce("3001", "successfully delete topic"))
+		return
+	case req.Action == "delete_vote":
+		mu.Lock()
+
+		delete(req.Voting.joiner, req.Username)
+
+		mu.Unlock()
+		ctx.JSON(3001, normalResponce("3001", "successfully delete vote"))
+		return
+	default:
+		ctx.JSON(1003, "connection closed")
+		conn.Close()
+		return
 	}
 
 }
+
 
