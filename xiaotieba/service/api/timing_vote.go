@@ -24,15 +24,16 @@ func (server *Server) vote(ctx *gin.Context) {
 	var req VoteRequest
 	var mu sync.Mutex
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, ctx.Request.Header)
-	defer conn.Close()
+
 	if err != nil {
 		ctx.JSON(websocket.CloseProtocolError, errorResponse(err)) //1011表示websocket 服务器遇到异常
-
+		conn.Close()
 		return
+
 	}
 	if err = conn.ReadJSON(req); err != nil {
 		ctx.JSON(websocket.CloseProtocolError, errorResponse(err)) //1011表示websocket 服务器遇到异常
-
+		conn.Close()
 		return
 	}
 
@@ -44,6 +45,7 @@ func (server *Server) vote(ctx *gin.Context) {
 			err := server.cache.Get(ctx, req.Topic)
 			if err != nil {
 				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
+				conn.Close()
 				return
 			}
 		//发起投票
@@ -57,6 +59,7 @@ func (server *Server) vote(ctx *gin.Context) {
 			if err != nil {
 				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
 				mu.Unlock()
+				conn.Close()
 				return
 			}
 			mu.Unlock()
@@ -69,13 +72,16 @@ func (server *Server) vote(ctx *gin.Context) {
 			if err != nil {
 				ctx.JSON(websocket.CloseInternalServerErr, errorResponse(err))
 				mu.Unlock()
+				conn.Close()
 				return
 			}
 			mu.Unlock()
 		case req.Action == "quit":
 			ctx.JSON(websocket.CloseNormalClosure, "connection closed")
+			conn.Close()
 			return
 		}
 	}
 
 }
+
