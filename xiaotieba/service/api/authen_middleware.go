@@ -15,6 +15,9 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
+type Payload struct {
+}
+
 // 该middleware用于检测请求头中的header中是否有authorization
 // 以及authorization中的token是否有效
 
@@ -35,7 +38,7 @@ func authMiddleware(maker token.Maker) gin.HandlerFunc {
 
 		authenType := strings.ToLower(fields[0])
 		if authenType != authorizationTypeBearer {
-			err := errors.New("Unsupported authorization type ")
+			err := errors.New("unsupported authorization type ")
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
 			return
 		}
@@ -46,6 +49,7 @@ func authMiddleware(maker token.Maker) gin.HandlerFunc {
 			return
 		}
 		ctx.Set(authorizationPayloadKey, payload)
+		ctx.Set("request username", payload.Username)
 		ctx.Next()
 	}
 }

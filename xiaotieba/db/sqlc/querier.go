@@ -32,6 +32,7 @@ type Querier interface {
 	GetUserByID(ctx context.Context, id int64) (User, error)
 	GetUserByUsername(ctx context.Context, name string) (User, error)
 	GetUserForUpdate(ctx context.Context, id int64) (User, error)
+	GetUserRoles(ctx context.Context, userID int32) (UsersRole, error)
 	ListUser(ctx context.Context, dollar_1 interface{}) ([]ListUserRow, error)
 }
 

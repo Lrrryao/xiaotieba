@@ -1,0 +1,19 @@
+
+//对于post的管理权
+
+
+p,角色，领域，操作，资源
+
+p, admin, allposts,delete_post, allposts
+p,postOwner,/post/id,delete_post,post/id   //先建policy，然后addroleindomain这是通式，使用时就把ID换成真实值就好
+
+
+
+p, admin, allposts, delete_comment, allposts/allcomments
+p,postOwner, /post/id, delete_comment, /post/id/allcomments
+p, commentor, /post/id,delete_comment,/post/id/comment/id
+
+
+g2, /post/:id, allposts    //用domain,用policy,已经写match了，
+g2,/comment/:id, allcommnets   //用domain，(用policy)，还没写match了
+

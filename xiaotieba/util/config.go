@@ -11,13 +11,17 @@ type Config struct {
 	//`mapstructure` tag(标签)
 	//用于将viper从env\json\ini等文件或者环境变量读取来的
 	//这个标签的作用是告诉 mapstructure 在解码过程中将 Viper 配置中的“db_driver”键的值赋给 DBDriver 字段。
-	DBdriver             string        `mapstructure:"db_driver"`
-	DBsource             string        `mapstructure:"db_source"`
-	ServerAddress        string        `mapstructure:"Server_address"`
-	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
-	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
-	RefreshTokenDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
-	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
+	DBdriver              string        `mapstructure:"db_driver"`
+	DBsource              string        `mapstructure:"db_source"`
+	ServerAddress         string        `mapstructure:"Server_address"`
+	TokenSymmetricKey     string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	AccessTokenDuration   time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	RefreshTokenDuration  time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	RedisAddress          string        `mapstructure:"REDIS_ADDRESS"`
+	RedisPassword         string        `mapstructure:"REDIS_PASSWORD"`
+	EMAIL_SENDER_NAME     string        `mapstructure:"EMAIL_SENDER_NAME"`
+	EMAIL_SENDER_ADDRESS  string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
+	EMAIL_SENDER_PASSWORD string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
 }
 
 func LoadConfig(path string) (config Config, err error) {

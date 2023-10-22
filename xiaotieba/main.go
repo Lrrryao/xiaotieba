@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	db "xiaotieba/db/sqlc"
+	"xiaotieba/mail"
 	"xiaotieba/service/api"
 	"xiaotieba/service/worker"
 	"xiaotieba/util"
@@ -14,6 +15,7 @@ import (
 func main() {
 	//读取配置并将其赋值给config
 	config, err := util.LoadConfig(".")
+
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot load config")
 	}
@@ -31,10 +33,17 @@ func main() {
 	}
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
+	//初始化服务器
 	server, err := api.NewServer(querier, config, taskDistributor)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}
+
+	//启动reids
+	server.RunRedisCache(config.RedisAddress, config.RedisPassword, 0)
+
+	//启动RBAC管理权限模式
+	server.StartEnforcer("./model.conf", "./policy.csv")
 	server.SetupRouter()
 
 	go runTaskProcessor(redisOpt, querier)
@@ -44,7 +53,9 @@ func main() {
 }
 
 func runTaskProcessor(redisOpt asynq.RedisClientOpt, querier db.Querier) {
-	processor := worker.NewRedisTaskProcessor(redisOpt, querier)
+	config, _ := util.LoadConfig(".")
+	mailSender := mail.NewQQSender(config.EMAIL_SENDER_NAME, config.EMAIL_SENDER_ADDRESS, config.EMAIL_SENDER_PASSWORD)
+	processor := worker.NewRedisTaskProcessor(redisOpt, querier, mailSender)
 	log.Info().Msg("start task processor")
 	if err := processor.Start(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to run processor server")

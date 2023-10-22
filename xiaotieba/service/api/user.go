@@ -39,11 +39,12 @@ func (server *Server) ListDiligentUser(ctx *gin.Context) {
 }
 
 type createUserRequest struct {
-	Username     string `json:"username" binding:"require,alphanum"`
-	HashPassword string `json:"hashpassword" binding:"require,min=6"`
-	Power        string `json:"power" binding:"require"`
-	Email        string `json:"email" binding:"require"`
-	Phone        string `json:"phone" binding:"require"`
+	Username     string   `json:"username" binding:"require,alphanum"`
+	HashPassword string   `json:"hashpassword" binding:"require,min=6"`
+	Power        string   `json:"power" binding:"require"`
+	Email        string   `json:"email" binding:"require"`
+	Phone        string   `json:"phone" binding:"require"`
+	Roles        []string `json:"roles" binding:"require"`
 }
 
 // 不用return，因为这个函数用于http协议通信，只需要发送响应即可
@@ -69,6 +70,9 @@ func (server *Server) SignUpUser(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+	for _, role := range req.Roles {
+		server.enforcer.AddRoleForUser(user.Name, role)
 	}
 	ctx.JSON(http.StatusOK, normalResponce("user", user))
 
@@ -107,13 +111,13 @@ type loginUserRequest struct {
 	Hashpassword string `json:"hashpassword" binding:"require,min=6"`
 }
 
-type userResponse struct {
-	Username          string    `json:"username"`
-	FullName          string    `json:"full_name"`
-	Email             string    `json:"email"`
-	PasswordChangedAt time.Time `json:"password_changed_at"`
-	CreatedAt         time.Time `json:"created_at"`
-}
+// type userResponse struct {
+// 	Username          string    `json:"username"`
+// 	FullName          string    `json:"full_name"`
+// 	Email             string    `json:"email"`
+// 	PasswordChangedAt time.Time `json:"password_changed_at"`
+// 	CreatedAt         time.Time `json:"created_at"`
+// }
 
 type loginUserResponse struct {
 	SessionID             uuid.UUID `json:"session_id"`
@@ -125,17 +129,6 @@ type loginUserResponse struct {
 	Password              string    `json:"password"`
 }
 
-type loginUserParam struct {
-	ID           uuid.UUID
-	Username     string
-	RefreshToken string
-	Useragent    string
-	ClientIp     string
-	Isblocked    bool
-	ExpireAt     time.Time
-}
-
-// 未完
 func (server *Server) loginUser(ctx *gin.Context) {
 	var req loginUserRequest
 	if err := ctx.ShouldBindJSON(req); err != nil {
@@ -152,19 +145,14 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: CheckPassWord未完成
+	//检查传入的密码和db的哈希密码是否一致
 	if err = util.CheckPassWord(req.Username, user.HashPassword); err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
-	/*
-
-		TODO：创建session，颁发token
-
-	*/
-	accessToken, accesspayload, err := server.tokenMaker.CreateToken(req.Username, server.config.AccessTokenDuration)
-	refreshToken, refreshpayload, err := server.tokenMaker.CreateToken(req.Username, server.config.RefreshTokenDuration)
+	accessToken, accesspayload, _ := server.tokenMaker.CreateToken(req.Username, server.config.AccessTokenDuration)
+	refreshToken, refreshpayload, _ := server.tokenMaker.CreateToken(req.Username, server.config.RefreshTokenDuration)
 	sessionparam := &db.CreateSessionParams{
 		ID:           refreshpayload.ID,
 		Username:     user.Name,
@@ -181,22 +169,6 @@ func (server *Server) loginUser(ctx *gin.Context) {
 		return
 	}
 
-	// type loginUserResponse struct {
-	// 	SessionID             uuid.UUID    `json:"session_id"`
-	// 	AccessToken           string       `json:"access_token"`
-	// 	AccessTokenExpiresAt  time.Time    `json:"access_token_expires_at"`
-	// 	RefreshToken          string       `json:"refresh_token"`
-	// 	RefreshTokenExpiresAt time.Time    `json:"refresh_token_expires_at"`
-	// 	User                  userResponse `json:"user"`
-	// }
-
-	// type userResponse struct {
-	// 	Username          string    `json:"username"`
-	// 	FullName          string    `json:"full_name"`
-	// 	Email             string    `json:"email"`
-	// 	PasswordChangedAt time.Time `json:"password_changed_at"`
-	// 	CreatedAt         time.Time `json:"created_at"`
-	// }
 	responce := loginUserResponse{
 		SessionID:             session.ID,
 		AccessToken:           accessToken,

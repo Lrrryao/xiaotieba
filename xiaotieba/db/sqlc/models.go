@@ -27,6 +27,11 @@ type Post struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Power struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 type Reply struct {
 	ID        int64     `json:"id"`
 	Content   string    `json:"content"`
@@ -34,6 +39,19 @@ type Reply struct {
 	PostID    int64     `json:"post_id"`
 	CommentID int64     `json:"comment_id"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Role struct {
+	ID       int64  `json:"id"`
+	RoleName string `json:"role_name"`
+}
+
+type RolesPower struct {
+	RpID      int64  `json:"rp_id"`
+	RoleID    int32  `json:"role_id"`
+	RoleName  string `json:"role_name"`
+	PowerID   int32  `json:"power_id"`
+	PowerName string `json:"power_name"`
 }
 
 type Session struct {
@@ -56,6 +74,14 @@ type User struct {
 	CreatedAt       time.Time `json:"created_at"`
 	Phone           string    `json:"phone"`
 	IsEmailVerified bool      `json:"is_email_verified"`
+}
+
+type UsersRole struct {
+	UrID     int32  `json:"ur_id"`
+	UserID   int32  `json:"user_id"`
+	UserName string `json:"user_name"`
+	RoleID   int32  `json:"role_id"`
+	RoleName string `json:"role_name"`
 }
 
 type VerifyEmail struct {
