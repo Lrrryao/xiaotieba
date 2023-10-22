@@ -2,7 +2,7 @@
 //对于post的管理权
 
 
-p,角色，领域，操作，资源
+//p,角色，领域，操作，资源
 
 p, admin, allposts,delete_post, allposts
 p,postOwner,/post/id,delete_post,post/id   //先建policy，然后addroleindomain这是通式，使用时就把ID换成真实值就好
