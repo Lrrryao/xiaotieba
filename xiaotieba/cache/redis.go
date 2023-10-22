@@ -21,14 +21,13 @@ func NewRedisCache(Addr, Password string, DB int) CacheStore {
 	}
 
 }
-func (cache *RedisCache) Get(ctx context.Context, key string) error {
-	err := cache.client.Get(ctx, "key").Err()
+func (cache *RedisCache) Get(ctx context.Context, key string) (string, error) {
+	result, err := cache.client.Get(ctx, "key").Result()
 	if err != nil {
-		return fmt.Errorf("Failed to get key:", err)
+		return result, fmt.Errorf("Failed to get key:", err)
 	}
-	return nil
+	return result, nil
 }
-
 // 增加键值对
 func (cache *RedisCache) Add(ctx context.Context, key string, value interface{}, expires time.Duration) error {
 	err := cache.client.Set(ctx, "key", "value", expires).Err()
